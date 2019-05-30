@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 from __future__ import print_function
 
 from astropy.io import fits
@@ -10,6 +12,13 @@ from matplotlib.colors import LogNorm
 import warnings
 from astropy.utils.exceptions import AstropyWarning
 from astropy.convolution import convolve, convolve_fft, Box2DKernel
+
+descStr = """
+Open big file and make an average image.
+
+Saves a png with same name as FITS image + .medimage.png
+
+"""
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore', astropy.wcs.FITSFixedWarning)
@@ -95,16 +104,8 @@ def makeplot(filename, data, head, verbose=True, thumbnail=False):
     if verbose:
         print('Saved to', outfile)
 
-
-if __name__ == "__main__":
+def main():
     import argparse
-
-    descStr = """
-    Open big file and make an average image.
-
-    Saves a png with same name as FITS image + .medimage.png
-
-    """
 
     # Parse the command line options
     parser = argparse.ArgumentParser(description=descStr,
@@ -122,4 +123,5 @@ if __name__ == "__main__":
     data, head = fitsopen(args.fitsfile, args.chan, args.verbose)
     makeplot(args.fitsfile, data, head, verbose=args.verbose, thumbnail=args.thumbnail)
 
-
+if __name__ == "__main__":
+    main()
