@@ -15,7 +15,7 @@ pip install cubeinspect
 
 ```
 $ cubei -h
-usage: cubei [-h] [-v] [-t] [-c vmin vmax] fitsfile channel
+usage: cubei [-h] [-v] [-t] [-c vmin vmax] [-d DPI] fitsfile channel
 
     Open big file and make an average image of a selected channel.
     Image will be squared so that Stokes Q and U look reasonable.
@@ -33,6 +33,7 @@ optional arguments:
   -v            Verbosity.
   -t            Make thumbnail (takes extra time!)
   -c vmin vmax  Limits for image (defaults to vmax=std(image))
+  -d DPI        Resolution of saved images in DPI.
 ```
 
 ## Contributing
