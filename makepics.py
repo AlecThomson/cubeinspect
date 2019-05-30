@@ -76,7 +76,7 @@ def makeplot(filename, data, head, verbose=True, thumbnail=False, lims=None):
         plt.show()
 
         outfile = re.sub('.fits', '.thumbnail.png', filename)
-        plt.savefig(outfile)
+        fig.savefig(outfile, dpi=500)
         print('Saved to', outfile)
     if verbose:
         print('Making plot')
@@ -107,7 +107,7 @@ def makeplot(filename, data, head, verbose=True, thumbnail=False, lims=None):
     plt.show()
 
     outfile = re.sub('.fits', '.medimage.png', filename)
-    plt.savefig(outfile)
+    fig.savefig(outfile, dpi=500)
     if verbose:
         print('Saved to', outfile)
 
