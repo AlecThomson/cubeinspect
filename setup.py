@@ -14,7 +14,7 @@ URL = 'https://github.com/alecthomson/cubeinspect'
 EMAIL = 'alec.thomson@anu.edu.au'
 AUTHOR = 'Alec Thomson'
 REQUIRES_PYTHON = '>=3.6.0'
-VERSION = '0.1.2'
+VERSION = '0.1.3'
 
 REQUIRED = [
     'astropy', 'numpy', 'matplotlib',
