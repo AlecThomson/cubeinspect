@@ -21,6 +21,19 @@ with warnings.catch_warnings():
 
 
 def fitsopen(filename, chan, verbose=True):
+    """
+    Open the FITS file. Central 10x10 pixels are inspected for NaNs or all 0s (in case of flagging). If the selected channel is bad, the channel 10 pixels along is selected.
+
+    Args:
+        filename: Name of the file (str).
+        chan: Channel index (int).
+        verbose: Verbosity (bool).
+
+    Returns:
+        data: Astropy array of containing selected channel image.
+        head: Astropy FITS header.
+
+    """
     if verbose:
         print('Opening', filename)
     hdulist = fits.open(filename, memmap=True, mode='denywrite')
@@ -28,22 +41,59 @@ def fitsopen(filename, chan, verbose=True):
     head = hdu.header
     size1 = head['NAXIS1']
     size2 = head['NAXIS2']
+    size3 = head['NAXIS3']
+
+    if chan > size3:
+        raise Exception('Channel outside of range!')
+
+    # Sniff around middle of image
     sniff = np.std(np.squeeze(hdu.data)[chan, size2 // 2 - 10:size2 // 2 + 10, size1 // 2 - 10:size1 // 2 + 10])
     if ~(sniff > 0) or ~np.isfinite(sniff):
-        chan += 10
+        if chan > 0:
+            chan += 10
+        if chan < 0:
+            chan -= 10
         if verbose:
             print('Bad channel! Trying N+10')
+
+    if chan > size3:
+        raise Exception('Channel outside of range!')
+
     else:
         if verbose:
             print('Good channel!')
-    data = np.squeeze(hdu.data)
+
+    # Check for Stokes axis
+    if head['NAXIS'] > 3:
+        if verbose:
+            print('Stokes axis present - [grumbles] - squishing it out!')
+        data = np.squeeze(hdu.data)
+
+    else:
+        data = hdu.data
     data = data[chan]
     return data, head
 
 
-def makeplot(filename, data, head, verbose=True, thumbnail=False, lims=None):
+def makeplot(filename, data, head, verbose=True, thumbnail=False, lims=None, dpi=1000):
+    """
+    Produce the plots. Will open an interactive matplotlib plot for inspection. After closing the image will be saved to a PNG.
+
+    Args:
+        filename: Name of the file (str).
+        data: Astropy array of containing selected channel image.
+        head: Astropy fits header.
+        verbose: Verbosity (bool).
+        thumbnail: EXPERIMENTAL -- Convolve the image with a 2D box and produce image (bool).
+        lims: The vmin and vmax of the image.
+
+    Returns:
+        None
+
+    """
+
+    # Make thumbnail image - work in progress
     if thumbnail:
-    # Still in-progress
         if verbose:
             print('Making thumbnail')
 
@@ -76,8 +126,11 @@ def makeplot(filename, data, head, verbose=True, thumbnail=False, lims=None):
         plt.show()
 
         outfile = re.sub('.fits', '.thumbnail.png', filename)
-        fig.savefig(outfile, dpi=500)
-        print('Saved to', outfile)
+        fig.savefig(outfile, dpi=dpi)
+        if verbose:
+            print('Saved to', outfile)
+
+    # Make main image
     if verbose:
         print('Making plot')
     image = np.power(data, 2)
@@ -107,7 +160,7 @@ def makeplot(filename, data, head, verbose=True, thumbnail=False, lims=None):
     plt.show()
 
     outfile = re.sub('.fits', '.medimage.png', filename)
-    fig.savefig(outfile, dpi=500)
+    fig.savefig(outfile, dpi=dpi)
     if verbose:
         print('Saved to', outfile)
 
@@ -130,16 +183,17 @@ def main():
                         help='FITS file to open')
     parser.add_argument("chan", metavar="channel", type=int,
                         default=0, help="Channel to inspect")
-    parser.add_argument("-v", dest="verbose", default=True,
+    parser.add_argument("-v", dest="verbose", default=False,
                         action="store_true", help="Verbosity.")
     parser.add_argument("-t", dest="thumbnail", default=False,
                         action="store_true", help="Make thumbnail (takes extra time!)")
     parser.add_argument("-c", metavar=('vmin', 'vmax'), dest="lims", type=float, nargs=2, default=None, help="Limits for image (defaults to vmax=std(image))")
+    parser.add_argument("-d", dest="dpi", type=float, default=1000, help="Resolution of saved images in DPI.")
 
 
     args = parser.parse_args()
     data, head = fitsopen(args.fitsfile, args.chan, args.verbose)
-    makeplot(args.fitsfile, data, head, verbose=args.verbose, thumbnail=args.thumbnail, lims=args.lims)
+    makeplot(args.fitsfile, data, head, verbose=args.verbose, thumbnail=args.thumbnail, lims=args.lims, dpi=args.dpi)
 
 
 if __name__ == "__main__":
