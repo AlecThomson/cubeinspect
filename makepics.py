@@ -12,11 +12,12 @@ from matplotlib.colors import LogNorm
 import warnings
 from astropy.utils.exceptions import AstropyWarning
 from astropy.convolution import convolve, convolve_fft, Box2DKernel
-
+import numexpr as ne
 
 
 with warnings.catch_warnings():
     warnings.simplefilter('ignore', astropy.wcs.FITSFixedWarning)
+    warnings.simplefilter('ignore', astropy.io.fits.hdu.image.VerifyWarning)
     warnings.simplefilter('ignore', category=AstropyWarning)
 
 
@@ -71,7 +72,7 @@ def fitsopen(filename, chan, verbose=True):
 
     else:
         data = hdu.data
-    data = data[chan]
+    data = ne.evaluate('sum(data**2, axis=0)')
     return data, head
 
 
@@ -133,7 +134,7 @@ def makeplot(filename, data, head, verbose=True, thumbnail=False, lims=None, dpi
     # Make main image
     if verbose:
         print('Making plot')
-    image = np.power(data, 2)
+    image = data
     if lims is None:
             rms = np.nanstd(image)
     proj = WCS(head).dropaxis(2).dropaxis(2)
